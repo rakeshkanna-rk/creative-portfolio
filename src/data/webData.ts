@@ -37,12 +37,9 @@ export const PERSONAL_INFO = {
   name: 'Monishwar',
   role: 'Motion Designer • Video Editor • Visual Creator',
   email: 'hello@monishwar.design',
-  location: 'Digital Space / Remote',
   availability: 'Open for new projects',
-  hero_title: 'Unleashing Visual Poetry',
-  hero_subtitle: 'Motion Designer • Editor • Visual Storyteller',
-  vision_statement: 'Crafting high-end visual narratives and cinematic motion experiences that resonate across the digital void.',
-  footer_text: 'Designed & Developed with Passion'
+  footer_text: 'Designed & Developed with Passion',
+  bio: ''
 };
 
 export const PROJECTS: Project[] = [

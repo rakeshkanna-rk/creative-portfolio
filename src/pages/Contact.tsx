@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { Mail, Phone, MapPin, Instagram, Twitter, Linkedin, Send } from 'lucide-react';
+import { Mail, Phone, Instagram, Twitter, Linkedin, Send } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/src/lib/utils';
 import FunkyHeading from '../components/FunkyHeading';
@@ -48,15 +48,7 @@ export default function Contact() {
                 <p className="text-lg md:text-2xl font-bold tracking-tight">{personalInfo.email}</p>
               </div>
             </div>
-            <div className="flex items-center gap-6 md:gap-8 group">
-              <div className="w-14 h-14 md:w-16 md:h-16 bg-white/5 rounded-2xl flex items-center justify-center border border-white/5 group-hover:bg-purple-600 transition-all duration-500 group-hover:rotate-12 group-hover:border-purple-500 shrink-0">
-                <MapPin className="text-purple-500 group-hover:text-white transition-colors" size={24} strokeWidth={1.5} />
-              </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.4em] text-white/20 mb-1">Location</p>
-                <p className="text-lg md:text-2xl font-bold tracking-tight">{personalInfo.location}</p>
-              </div>
-            </div>
+
           </div>
 
           <div className="flex gap-6">

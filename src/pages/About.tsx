@@ -2,15 +2,18 @@ import { motion, useScroll, useSpring } from 'motion/react';
 import { useRef } from 'react';
 import { cn } from '../lib/utils';
 import FunkyHeading from '../components/FunkyHeading';
-import { SiBlender, SiCanva } from 'react-icons/si';
+import { SiBlender, SiCanva, SiFigma, SiDavinciresolve, SiGithub } from 'react-icons/si';
 import { 
   Layers, Video, Image as ImageIcon, PenTool, Zap, Film, Palette, 
-  Play, Code, Database, Globe, Cpu, Monitor, Smartphone 
+  Play, Code, Database, Globe, Cpu, Monitor, Smartphone, Search,
+  Wand2, Sparkles, Camera, Scissors, Frame
 } from 'lucide-react';
 
 const skillIconMap: Record<string, any> = {
-  SiBlender, SiCanva, Layers, Video, ImageIcon, PenTool, Zap, Film, Palette,
-  Play, Code, Database, Globe, Cpu, Monitor, Smartphone
+  SiBlender, SiCanva, SiFigma, SiDavinciresolve, SiGithub,
+  Layers, Video, ImageIcon, PenTool, Zap, Film, Palette,
+  Play, Code, Database, Globe, Cpu, Monitor, Smartphone, Search,
+  Wand2, Sparkles, Camera, Scissors, Frame
 };
 
 import { usePortfolioData } from '../hooks/usePortfolioData';
@@ -50,15 +53,9 @@ export default function About() {
             </motion.h2>
             
             <div className="space-y-8 text-lg md:text-2xl text-white/60 leading-relaxed font-light">
-              <p>
-                Hi, I’m {personalInfo.name} — a passionate freelance graphic designer and video editor with over 3 years of hands-on experience in crafting visually compelling and impactful digital content.
-              </p>
-              <p>
-                I specialize in bringing ideas to life through creative design and engaging video storytelling. With strong expertise in industry-leading tools like Adobe Photoshop, Illustrator, After Effects, and Premiere Pro, along with a working knowledge of Blender, I deliver high-quality visuals that align perfectly with brand identity and audience expectations.
-              </p>
-              <p>
-                My approach combines creativity with strategy — whether it’s designing eye-catching graphics, editing dynamic videos, or building a complete digital presence for brands. I focus on understanding each client’s vision and transforming it into powerful visual communication that stands out in today’s competitive digital space.
-              </p>
+              <div className="whitespace-pre-wrap">
+                {personalInfo.bio || `Hi, I’m ${personalInfo.name} — a passionate freelance graphic designer and video editor with over 3 years of hands-on experience in crafting visually compelling and impactful digital content.`}
+              </div>
             </div>
           </div>
           
@@ -69,7 +66,7 @@ export default function About() {
               className="relative aspect-3/4 rounded-3xl overflow-hidden border border-white/10 group shadow-2xl"
             >
               <img
-                src="https://picsum.photos/seed/monishwar/800/1000"
+                src="/profile.png"
                 alt={personalInfo.name}
                 className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 scale-110 group-hover:scale-100"
                 referrerPolicy="no-referrer"
@@ -112,7 +109,9 @@ export default function About() {
         <FunkyHeading className="text-3xl md:text-6xl mb-16 md:mb-20 text-center">Core Arsenal</FunkyHeading>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-6 md:gap-8 max-w-5xl mx-auto">
           {skills.map((skill, i) => {
-            const Icon = typeof skill.icon === 'string' ? skillIconMap[skill.icon] : skill.icon;
+            const iconName = skill.icon;
+            const isCustomUrl = typeof iconName === 'string' && iconName.startsWith('http');
+            const Icon = !isCustomUrl && typeof iconName === 'string' ? skillIconMap[iconName] : (typeof iconName !== 'string' ? iconName : null);
             return (
               <motion.div
                 key={skill.name}
@@ -123,11 +122,15 @@ export default function About() {
                 className="relative bg-white/5 p-6 md:p-8 rounded-2xl border border-white/10 flex flex-col items-center justify-center text-center group hover:bg-purple-500/10 transition-all duration-500"
               >
                 <div className="relative mb-4 group-hover:scale-110 transition-transform duration-500">
-                  {Icon && <Icon 
-                    size={40} 
-                    className="text-white/40 group-hover:text-white transition-colors duration-500"
-                    style={{ filter: `drop-shadow(0 0 0px ${skill.color})` }}
-                  />}
+                  {isCustomUrl ? (
+                    <img src={iconName} alt={skill.name} className="w-10 h-10 object-contain opacity-40 group-hover:opacity-100 transition-opacity duration-500" style={{ filter: `drop-shadow(0 0 0px ${skill.color})` }} />
+                  ) : Icon ? (
+                    <Icon 
+                      size={40} 
+                      className="text-white/40 group-hover:text-white transition-colors duration-500"
+                      style={{ filter: `drop-shadow(0 0 0px ${skill.color})` }}
+                    />
+                  ) : null}
                 <div 
                   className="absolute inset-0 blur-xl opacity-0 group-hover:opacity-50 transition-opacity duration-500 -z-10"
                   style={{ backgroundColor: skill.color }}

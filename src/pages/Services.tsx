@@ -1,7 +1,9 @@
 import { motion } from 'motion/react';
+import { SiBlender, SiCanva, SiFigma, SiDavinciresolve, SiGithub } from 'react-icons/si';
 import { 
   Video, Film, Zap, Layers, Palette, Play, 
-  Code, Database, Globe, Cpu, Monitor, Smartphone, PenTool, Image as ImageIcon
+  Code, Database, Globe, Cpu, Monitor, Smartphone, PenTool, Image as ImageIcon, Search,
+  Wand2, Sparkles, Camera, Scissors, Frame
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import FunkyHeading from '../components/FunkyHeading';
@@ -10,7 +12,9 @@ import { usePortfolioData } from '../hooks/usePortfolioData';
 
 const iconMap: Record<string, any> = {
   Video, Film, Zap, Layers, Palette, Play,
-  Code, Database, Globe, Cpu, Monitor, Smartphone, PenTool, ImageIcon
+  Code, Database, Globe, Cpu, Monitor, Smartphone, PenTool, ImageIcon, Search,
+  Wand2, Sparkles, Camera, Scissors, Frame,
+  SiBlender, SiCanva, SiFigma, SiDavinciresolve, SiGithub
 };
 
 export default function Services() {
@@ -29,7 +33,10 @@ export default function Services() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12">
         {services.map((service, i) => {
-          const Icon = typeof service.icon === 'string' ? iconMap[service.icon] : service.icon;
+          const iconName = service.icon;
+          const isCustomUrl = typeof iconName === 'string' && iconName.startsWith('http');
+          const Icon = !isCustomUrl && typeof iconName === 'string' ? iconMap[iconName] : (typeof iconName !== 'string' ? iconName : null);
+          
           return (
             <motion.div
               key={service.title}
@@ -41,11 +48,15 @@ export default function Services() {
             >
               {/* Background Icon Accent */}
               <div className="absolute -top-10 -right-10 p-6 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity duration-700 pointer-events-none group-hover:scale-110 transform origin-center">
-                {Icon && <Icon size={200} strokeWidth={0.5} />}
+                {isCustomUrl ? (
+                  <img src={iconName} alt="" className="w-48 h-48 object-contain grayscale invert" />
+                ) : Icon && <Icon size={200} strokeWidth={0.5} />}
               </div>
               
-              <div className="w-16 h-16 md:w-20 md:h-20 bg-white/5 rounded-3xl flex items-center justify-center mb-10 md:mb-14 group-hover:bg-purple-600 transition-all duration-500 group-hover:rotate-10 border border-white/10 group-hover:border-purple-500 shadow-xl">
-                {Icon && <Icon className="text-white group-hover:scale-110 transition-transform duration-500" size={32} strokeWidth={1.5} />}
+              <div className="w-16 h-16 md:w-20 md:h-20 bg-white/5 rounded-3xl flex items-center justify-center mb-10 md:mb-14 group-hover:bg-purple-600 transition-all duration-500 group-hover:rotate-10 border border-white/10 group-hover:border-purple-500 shadow-xl overflow-hidden p-4">
+                {isCustomUrl ? (
+                  <img src={iconName} alt={service.title} className="w-full h-full object-contain brightness-0 invert group-hover:scale-110 transition-transform duration-500" />
+                ) : Icon && <Icon className="text-white group-hover:scale-110 transition-transform duration-500" size={32} strokeWidth={1.5} />}
               </div>
 
             <h3 className="text-2xl md:text-4xl font-black uppercase mb-6 tracking-tighter italic leading-none group-hover:text-glow transition-all duration-500">{service.title}</h3>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, Reorder } from 'motion/react';
 import { supabase } from '../../lib/supabase';
 import { 
   LayoutDashboard, 
@@ -12,6 +12,8 @@ import {
   Image as ImageIcon,
   LogOut as LogOutIcon,
   ChevronRight,
+  ChevronUp,
+  ChevronDown,
   Video,
   Zap,
   Clock,
@@ -26,10 +28,18 @@ import {
   Cpu,
   Monitor,
   Smartphone,
-  Check
+  Check,
+  Search,
+  Wand2,
+  Sparkles,
+  Camera,
+  Scissors,
+  Frame
 } from 'lucide-react';
+import { SiFigma, SiBlender, SiCanva, SiDavinciresolve, SiGithub } from 'react-icons/si';
 import { Toaster, toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { Upload } from 'lucide-react';
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('projects');
@@ -42,12 +52,24 @@ export default function Dashboard() {
   const [skills, setSkills] = useState<any[]>([]);
   const [timeline, setTimeline] = useState<any[]>([]);
   const [personalInfo, setPersonalInfo] = useState<any>({});
+  const [customIconUrl, setCustomIconUrl] = useState<string>('');
+  const [uploadingIcon, setUploadingIcon] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     checkUser();
     fetchAllData();
   }, []);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isModalOpen]);
 
   async function checkUser() {
     const { data: { user } } = await supabase.auth.getUser();
@@ -125,7 +147,27 @@ export default function Dashboard() {
   const handleOpenModal = (type: any, item: any = null) => {
     setModalType(type);
     setEditingItem(item);
+    setCustomIconUrl(item?.icon_name?.startsWith('http') ? item.icon_name : '');
     setIsModalOpen(true);
+  };
+
+  const handleIconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingIcon(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const fileName = `icon_${Date.now()}.${ext}`;
+      const { data, error } = await supabase.storage.from('icons').upload(fileName, file, { upsert: true });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from('icons').getPublicUrl(data.path);
+      setCustomIconUrl(urlData.publicUrl);
+      toast.success('Icon uploaded!');
+    } catch (err: any) {
+      toast.error(err.message || 'Upload failed');
+    } finally {
+      setUploadingIcon(false);
+    }
   };
 
   const handleSaveItem = async (e: React.FormEvent) => {
@@ -138,6 +180,11 @@ export default function Dashboard() {
     delete data.color_text;
     delete data.hex_display;
     delete data.color_hex;
+
+    // If custom icon was uploaded, use that URL as icon_name
+    if (customIconUrl && (modalType === 'skill' || modalType === 'service')) {
+      data.icon_name = customIconUrl;
+    }
 
     // Handle array for services features
     if (modalType === 'service' && data.features) {
@@ -168,6 +215,41 @@ export default function Dashboard() {
     }
   };
 
+  const handleMoveProject = async (id: number, direction: 'up' | 'down', category: string) => {
+    const catProjects = projects
+      .filter(p => p.category === category)
+      .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+    
+    const index = catProjects.findIndex(p => p.id === id);
+    if (index === -1) return;
+    if (direction === 'up' && index === 0) return;
+    if (direction === 'down' && index === catProjects.length - 1) return;
+
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    const currentProj = catProjects[index];
+    const targetProj = catProjects[targetIndex];
+
+    try {
+      // Swap order_index
+      const { error: err1 } = await supabase
+        .from('projects')
+        .update({ order_index: targetIndex })
+        .eq('id', currentProj.id);
+      
+      const { error: err2 } = await supabase
+        .from('projects')
+        .update({ order_index: index })
+        .eq('id', targetProj.id);
+
+      if (err1 || err2) throw err1 || err2;
+
+      toast.success('Sequence Shifted');
+      fetchAllData();
+    } catch (error: any) {
+      toast.error('Quantization Error');
+    }
+  };
+
   const handleDeleteItem = async (table: string, id: number) => {
     if (!confirm('Permanent deletion authorized?')) return;
     try {
@@ -194,7 +276,18 @@ export default function Dashboard() {
     { name: 'Globe', icon: Globe },
     { name: 'Cpu', icon: Cpu },
     { name: 'Monitor', icon: Monitor },
-    { name: 'Smartphone', icon: Smartphone }
+    { name: 'Smartphone', icon: Smartphone },
+    { name: 'Search', icon: Search },
+    { name: 'Wand2', icon: Wand2, label: 'Wand' },
+    { name: 'Sparkles', icon: Sparkles, label: 'Sparkles' },
+    { name: 'Camera', icon: Camera, label: 'Camera' },
+    { name: 'Scissors', icon: Scissors, label: 'Scissors' },
+    { name: 'Frame', icon: Frame, label: 'Frame' },
+    { name: 'SiFigma', icon: SiFigma, label: 'Figma' },
+    { name: 'SiBlender', icon: SiBlender, label: 'Blender' },
+    { name: 'SiCanva', icon: SiCanva, label: 'Canva' },
+    { name: 'SiDavinciresolve', icon: SiDavinciresolve, label: 'DaVinci' },
+    { name: 'SiGithub', icon: SiGithub, label: 'Github' }
   ];
 
   return (
@@ -297,47 +390,78 @@ export default function Dashboard() {
           {activeTab === 'projects' && (
             <motion.div
               key="projects"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="space-y-16 pb-20"
             >
-              {projects.length > 0 ? projects.map((project) => (
-                <div key={project.id} className="bg-white/5 rounded-3xl border border-white/5 overflow-hidden group hover:border-purple-500/30 transition-all">
-                  <div className="aspect-video relative overflow-hidden bg-zinc-900">
-                    <img 
-                      src={project.image} 
-                      alt="" 
-                      className="w-full h-full object-cover opacity-50 group-hover:scale-110 transition-transform duration-700" 
-                    />
-                    <div className="absolute top-4 left-4">
-                      {project.type === 'video' ? <Video size={16} /> : <ImageIcon size={16} />}
+              {['Motion Graphics', 'Video Editing', 'Graphic Design'].map((cat) => {
+                const catProjects = projects
+                  .filter(p => p.category === cat)
+                  .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+
+                return (
+                  <div key={cat} className="space-y-8">
+                    <div className="flex items-center gap-4">
+                      <div className="w-2 h-8 bg-purple-500 rounded-full" />
+                      <h3 className="text-3xl font-black uppercase tracking-tighter italic">{cat}</h3>
+                      <span className="text-white/20 text-xs font-bold font-mono">[{catProjects.length}]</span>
                     </div>
+
+                    {catProjects.length > 0 ? (
+                      <div className="space-y-4">
+                        {catProjects.map((project, idx) => (
+                          <div 
+                            key={project.id} 
+                            className="bg-white/5 rounded-2xl border border-white/5 overflow-hidden flex items-center group hover:border-purple-500/30 transition-all"
+                          >
+                            <div className="w-40 aspect-video relative shrink-0 bg-zinc-900 border-r border-white/5">
+                              <img src={project.image} alt="" className="w-full h-full object-cover opacity-50" />
+                            </div>
+                            <div className="flex-1 p-6 flex items-center justify-between">
+                              <div>
+                                <h4 className="text-lg font-bold uppercase tracking-tight line-clamp-1">{project.title}</h4>
+                                <div className="flex items-center gap-3 mt-1">
+                                  <span className="text-[10px] uppercase font-black tracking-widest text-purple-500/60">{project.type}</span>
+                                  <span className="text-[10px] uppercase font-bold tracking-widest text-white/20">{project.aspect_ratio || '16/9'}</span>
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                <div className="flex gap-1 mr-2 px-2 border-r border-white/5">
+                                  <button 
+                                    onClick={() => handleMoveProject(project.id, 'up', cat)}
+                                    disabled={idx === 0}
+                                    className="p-2 hover:bg-white/10 rounded-lg text-white/40 hover:text-white transition-all disabled:opacity-0"
+                                  >
+                                    <ChevronUp size={16} />
+                                  </button>
+                                  <button 
+                                    onClick={() => handleMoveProject(project.id, 'down', cat)}
+                                    disabled={idx === catProjects.length - 1}
+                                    className="p-2 hover:bg-white/10 rounded-lg text-white/40 hover:text-white transition-all disabled:opacity-0"
+                                  >
+                                    <ChevronDown size={16} />
+                                  </button>
+                                </div>
+                                <button onClick={() => handleOpenModal('project', project)} className="p-3 bg-white/5 hover:bg-white hover:text-black rounded-xl border border-white/5 transition-all">
+                                  <Settings size={16} />
+                                </button>
+                                <button onClick={() => handleDeleteItem('projects', project.id)} className="p-3 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-xl transition-all">
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="py-12 text-center border border-dashed border-white/5 rounded-3xl">
+                        <p className="text-white/10 uppercase tracking-[0.3em] text-[10px]">Void Space - No Fragments in {cat}</p>
+                      </div>
+                    )}
                   </div>
-                  <div className="p-6">
-                    <p className="text-purple-500 text-[10px] uppercase font-black tracking-widest mb-1">{project.category}</p>
-                    <h3 className="text-lg font-bold uppercase tracking-tight">{project.title}</h3>
-                    <div className="flex gap-4 mt-6">
-                      <button 
-                        onClick={() => handleOpenModal('project', project)}
-                        className="flex-1 bg-white/5 hover:bg-white hover:text-black py-3 rounded-xl border border-white/5 text-[10px] font-black uppercase tracking-widest transition-all"
-                      >
-                        Edit
-                      </button>
-                      <button 
-                        onClick={() => handleDeleteItem('projects', project.id)}
-                        className="p-3 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-xl transition-all"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )) : (
-                <div className="col-span-full py-20 text-center border border-dashed border-white/10 rounded-3xl">
-                  <p className="text-white/20 uppercase tracking-[0.3em] text-xs">No fragments found in the void</p>
-                </div>
-              )}
+                );
+              })}
             </motion.div>
           )}
           
@@ -366,20 +490,12 @@ export default function Dashboard() {
                     <label className="text-[10px] uppercase tracking-widest text-white/30 font-bold ml-4">Hero Heading</label>
                     <input name="hero_title" className="w-full bg-white/5 border border-white/5 rounded-2xl p-6 focus:outline-none focus:border-purple-500 focus:bg-white/10" defaultValue={personalInfo?.hero_title} />
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] uppercase tracking-widest text-white/30 font-bold ml-4">Hero Subheading</label>
-                    <input name="hero_subtitle" className="w-full bg-white/5 border border-white/5 rounded-2xl p-6 focus:outline-none focus:border-purple-500 focus:bg-white/10" defaultValue={personalInfo?.hero_subtitle} />
-                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-2">
                     <label className="text-[10px] uppercase tracking-widest text-white/30 font-bold ml-4">Email Address</label>
                     <input name="email" className="w-full bg-white/5 border border-white/5 rounded-2xl p-6 focus:outline-none focus:border-purple-500 focus:bg-white/10" defaultValue={personalInfo?.email} />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] uppercase tracking-widest text-white/30 font-bold ml-4">Location</label>
-                    <input name="location" className="w-full bg-white/5 border border-white/5 rounded-2xl p-6 focus:outline-none focus:border-purple-500 focus:bg-white/10" defaultValue={personalInfo?.location} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] uppercase tracking-widest text-white/30 font-bold ml-4">Availability</label>
@@ -388,9 +504,16 @@ export default function Dashboard() {
                 </div>
                 
                 <div className="space-y-2">
-                   <label className="text-[10px] uppercase tracking-widest text-white/30 font-bold ml-4">The Vision Statement</label>
-                   <textarea name="vision_statement" rows={4} className="w-full bg-white/5 border border-white/5 rounded-2xl p-6 focus:outline-none focus:border-purple-500 focus:bg-white/10 resize-none" defaultValue={personalInfo?.vision_statement} />
+                   <label className="text-[10px] uppercase tracking-widest text-white/30 font-bold ml-4">Bio / About Me</label>
+                   <textarea 
+                     name="bio" 
+                     rows={8} 
+                     className="w-full bg-white/5 border border-white/5 rounded-2xl p-6 focus:outline-none focus:border-purple-500 focus:bg-white/10 resize-none font-light leading-relaxed" 
+                     defaultValue={personalInfo?.bio} 
+                     placeholder="Tell your story..."
+                   />
                 </div>
+
 
                 <div className="space-y-2">
                    <label className="text-[10px] uppercase tracking-widest text-white/30 font-bold ml-4">Footer Text</label>
@@ -416,8 +539,16 @@ export default function Dashboard() {
               {services.map((service) => (
                 <div key={service.id} className="bg-white/5 p-8 rounded-3xl border border-white/5 flex items-center justify-between group hover:border-purple-500/30 transition-all">
                   <div className="flex items-center gap-8">
-                    <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-purple-500">
-                      <Settings size={28} />
+                    <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-purple-500 overflow-hidden p-3">
+                      {(() => {
+                        const iconVal = service.icon_name || service.icon;
+                        if (iconVal?.startsWith('http')) {
+                          return <img src={iconVal} alt="" className="w-full h-full object-contain brightness-0 invert" />;
+                        }
+                        const IconObj = AVAILABLE_ICONS.find(i => i.name === iconVal);
+                        const Icon = IconObj ? IconObj.icon : Settings;
+                        return <Icon size={28} />;
+                      })()}
                     </div>
                     <div>
                       <h3 className="text-xl font-bold uppercase tracking-tight">{service.title}</h3>
@@ -461,9 +592,13 @@ export default function Dashboard() {
               {skills.map((skill) => (
                 <div key={skill.id} className="bg-white/5 p-6 rounded-3xl border border-white/5 flex items-center justify-between group hover:border-purple-500/30 transition-all">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-white/5" style={{ color: skill.color }}>
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-white/5 overflow-hidden p-2" style={{ color: skill.color }}>
                       {(() => {
-                        const IconObj = AVAILABLE_ICONS.find(i => i.name === skill.icon_name || i.name === skill.icon);
+                        const iconVal = skill.icon_name || skill.icon;
+                        if (iconVal?.startsWith('http')) {
+                          return <img src={iconVal} alt="" className="w-full h-full object-contain" style={{ filter: `drop-shadow(0 0 4px ${skill.color})` }} />;
+                        }
+                        const IconObj = AVAILABLE_ICONS.find(i => i.name === iconVal);
                         const Icon = IconObj ? IconObj.icon : Zap;
                         return <Icon size={20} />;
                       })()}
@@ -556,10 +691,10 @@ export default function Dashboard() {
               />
               
               <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="relative bg-[#0a0a0a] border border-white/10 rounded-[2.5rem] w-full max-w-2xl overflow-hidden shadow-2xl"
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="relative bg-[#0a0a0a] border border-white/10 rounded-[2.5rem] w-full max-w-5xl overflow-hidden shadow-2xl"
               >
                 <div className="p-8 border-b border-white/5 flex justify-between items-center">
                   <h3 className="text-xl font-black uppercase tracking-widest italic">
@@ -579,14 +714,18 @@ export default function Dashboard() {
                           <input name="title" required className="w-full bg-white/5 border border-white/5 rounded-2xl p-4 focus:outline-none focus:border-purple-500" defaultValue={editingItem?.title} />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[10px] uppercase tracking-widest text-white/30 font-bold ml-4">Order Index</label>
-                          <input name="order_index" type="number" className="w-full bg-white/5 border border-white/5 rounded-2xl p-4 focus:outline-none focus:border-purple-500" defaultValue={editingItem?.order_index || 0} />
+                          <label className="text-[10px] uppercase tracking-widest text-white/30 font-bold ml-4">Ratio</label>
+                          <select name="aspect_ratio" className="w-full bg-white/10 border border-white/10 rounded-2xl p-4 focus:outline-none focus:border-purple-500 text-white [&>option]:bg-zinc-900 [&>option]:text-white" defaultValue={editingItem?.aspect_ratio || '16/9'}>
+                            <option value="16/9">16/9 (Desktop)</option>
+                            <option value="9/16">9/16 (Reels/Shorts)</option>
+                            <option value="4/5">4/5 (Instagram)</option>
+                          </select>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <label className="text-[10px] uppercase tracking-widest text-white/30 font-bold ml-4">Category</label>
-                          <select name="category" className="w-full bg-white/5 border border-white/5 rounded-2xl p-4 focus:outline-none focus:border-purple-500" defaultValue={editingItem?.category || 'Motion Graphics'}>
+                          <select name="category" className="w-full bg-white/10 border border-white/10 rounded-2xl p-4 focus:outline-none focus:border-purple-500 text-white [&>option]:bg-zinc-900 [&>option]:text-white" defaultValue={editingItem?.category || 'Motion Graphics'}>
                             <option value="Motion Graphics">Motion Graphics</option>
                             <option value="Video Editing">Video Editing</option>
                             <option value="Graphic Design">Graphic Design</option>
@@ -594,7 +733,7 @@ export default function Dashboard() {
                         </div>
                         <div className="space-y-2">
                           <label className="text-[10px] uppercase tracking-widest text-white/30 font-bold ml-4">Media Type</label>
-                          <select name="type" className="w-full bg-white/5 border border-white/5 rounded-2xl p-4 focus:outline-none focus:border-purple-500" defaultValue={editingItem?.type || 'video'}>
+                          <select name="type" className="w-full bg-white/10 border border-white/10 rounded-2xl p-4 focus:outline-none focus:border-purple-500 text-white [&>option]:bg-zinc-900 [&>option]:text-white" defaultValue={editingItem?.type || 'video'}>
                             <option value="video">Video</option>
                             <option value="image">Image</option>
                           </select>
@@ -606,7 +745,11 @@ export default function Dashboard() {
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] uppercase tracking-widest text-white/30 font-bold ml-4">Video URL (Optional)</label>
-                        <input name="video_url" className="w-full bg-white/5 border border-white/5 rounded-2xl p-4 focus:outline-none focus:border-purple-500" defaultValue={editingItem?.video_url} />
+                        <input name="video_url" className="w-full bg-white/5 border border-white/5 rounded-2xl p-4 focus:outline-none focus:border-purple-500" defaultValue={editingItem?.video_url} placeholder="YouTube URL or Direct Video link (.mp4)" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] uppercase tracking-widest text-white/30 font-bold ml-4">Description</label>
+                        <textarea name="description" rows={4} className="w-full bg-white/5 border border-white/5 rounded-2xl p-4 focus:outline-none focus:border-purple-500 resize-none" defaultValue={editingItem?.description} placeholder="Describe the fragments..." />
                       </div>
                     </>
                   )}
@@ -632,21 +775,56 @@ export default function Dashboard() {
                       
                       <div className="space-y-4">
                         <label className="text-[10px] uppercase tracking-widest text-white/30 font-bold ml-4 block">Select Icon</label>
-                        <div className="grid grid-cols-7 gap-2">
+                        <div className="grid grid-cols-10 gap-2">
                           {AVAILABLE_ICONS.map((icon) => (
-                            <label key={icon.name} className="cursor-pointer">
+                            <label key={icon.name} className="cursor-pointer group relative">
                               <input 
                                 type="radio" 
                                 name="icon_name" 
                                 value={icon.name} 
                                 className="hidden peer" 
-                                defaultChecked={editingItem?.icon_name === icon.name || editingItem?.icon === icon.name} 
+                                defaultChecked={!customIconUrl && (editingItem?.icon_name === icon.name || editingItem?.icon === icon.name)} 
+                                onChange={() => setCustomIconUrl('')}
                               />
-                              <div className="w-full aspect-square flex items-center justify-center bg-white/5 border border-transparent rounded-xl peer-checked:border-purple-500 peer-checked:bg-purple-500/10 transition-all hover:bg-white/10">
+                              <div className="w-full aspect-square flex items-center justify-center bg-white/5 border border-white/5 rounded-xl peer-checked:border-purple-500 peer-checked:bg-purple-500/10 transition-all hover:bg-white/10">
                                 <icon.icon size={18} />
+                              </div>
+                              <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black/90 text-[8px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 border border-white/10">
+                                {(icon as any).label || icon.name}
                               </div>
                             </label>
                           ))}
+                        </div>
+
+                        {/* Custom Icon Upload */}
+                        <div className="mt-4 pt-4 border-t border-white/5">
+                          <p className="text-[10px] uppercase tracking-widest text-white/30 font-bold ml-1 mb-3">Or Upload Custom Icon</p>
+                          <div className="flex items-center gap-4">
+                            <label className="cursor-pointer flex-1">
+                              <input type="file" accept="image/*,.svg" className="hidden" onChange={handleIconUpload} />
+                              <div className={`flex items-center justify-center gap-3 py-4 px-6 rounded-2xl border border-dashed transition-all ${
+                                customIconUrl 
+                                  ? 'border-purple-500 bg-purple-500/10 text-purple-400' 
+                                  : 'border-white/10 text-white/30 hover:border-white/30 hover:text-white/50'
+                              }`}>
+                                {uploadingIcon ? (
+                                  <span className="text-xs animate-pulse">Uploading...</span>
+                                ) : (
+                                  <>
+                                    <Upload size={16} />
+                                    <span className="text-xs font-bold uppercase tracking-widest">
+                                      {customIconUrl ? 'Change Icon' : 'Upload SVG / PNG'}
+                                    </span>
+                                  </>
+                                )}
+                              </div>
+                            </label>
+                            {customIconUrl && (
+                              <div className="w-14 h-14 rounded-xl border border-purple-500 bg-purple-500/10 flex items-center justify-center overflow-hidden shrink-0">
+                                <img src={customIconUrl} alt="Custom icon" className="w-8 h-8 object-contain" />
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
 

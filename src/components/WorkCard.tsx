@@ -11,7 +11,9 @@ interface WorkCardProps {
   type: 'video' | 'image';
   description?: string;
   videoUrl?: string;
+  video_url?: string;
   aspectRatio?: AspectRatio;
+  aspect_ratio?: AspectRatio;
   index: number;
   onClick?: () => void;
 }
@@ -22,10 +24,12 @@ export default function WorkCard({
   image, 
   type, 
   description, 
-  aspectRatio = '16/9', 
+  aspectRatio: manualAspectRatio, 
+  aspect_ratio: dbAspectRatio,
   index, 
   onClick 
 }: WorkCardProps) {
+  const currentAspectRatio = manualAspectRatio || dbAspectRatio || '16/9';
   return (
     <motion.div
       initial={{ opacity: 0, y: 50 }}
