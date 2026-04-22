@@ -255,9 +255,27 @@ export default function Dashboard() {
       };
 
       const table = tableMap[modalType!];
+      let itemData: any = { ...data };
+
+      if (!editingItem?.id) {
+        let nextIndex = 0;
+        if (modalType === "project") {
+          const cat = data.category;
+          const count = projects.filter(p => p.category === cat).length;
+          nextIndex = count;
+        } else if (modalType === "service") {
+          nextIndex = services.length;
+        } else if (modalType === "skill") {
+          nextIndex = skills.length;
+        } else if (modalType === "social") {
+          nextIndex = socialLinks.length;
+        }
+        itemData.order_index = nextIndex;
+      }
+
       const { error } = await supabase
         .from(table)
-        .upsert(editingItem?.id ? { id: editingItem.id, ...data } : data);
+        .upsert(editingItem?.id ? { id: editingItem.id, ...itemData } : itemData);
 
       if (error) throw error;
       toast.success("Reality Branch Merged");
@@ -1223,7 +1241,7 @@ export default function Dashboard() {
                     modalType === "service" ||
                     modalType === "social") && (
                     <>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 gap-4">
                         <div className="space-y-2">
                           <label className="text-[10px] uppercase tracking-widest text-white/30 font-bold ml-4">
                             Name/Title
@@ -1237,37 +1255,21 @@ export default function Dashboard() {
                             }
                           />
                         </div>
-                        <div className="space-y-2">
-                          <label className="text-[10px] uppercase tracking-widest text-white/30 font-bold ml-4">
-                            {modalType === "social" ? "Profile URL" : "Order Index"}
-                          </label>
-                          <input
-                            name={modalType === "social" ? "url" : "order_index"}
-                            required={modalType === "social"}
-                            type={modalType === "social" ? "text" : "number"}
-                            className="w-full bg-white/5 border border-white/5 rounded-2xl p-4 focus:outline-none focus:border-purple-500"
-                            defaultValue={
-                              modalType === "social"
-                                ? editingItem?.url
-                                : editingItem?.order_index || 0
-                            }
-                            placeholder={modalType === "social" ? "https://..." : "0"}
-                          />
-                        </div>
+                        {modalType === "social" && (
+                          <div className="space-y-2">
+                            <label className="text-[10px] uppercase tracking-widest text-white/30 font-bold ml-4">
+                              Profile URL
+                            </label>
+                            <input
+                              name="url"
+                              required
+                              className="w-full bg-white/5 border border-white/5 rounded-2xl p-4 focus:outline-none focus:border-purple-500"
+                              defaultValue={editingItem?.url}
+                              placeholder="https://..."
+                            />
+                          </div>
+                        )}
                       </div>
-                      {modalType === "social" && (
-                        <div className="space-y-2">
-                          <label className="text-[10px] uppercase tracking-widest text-white/30 font-bold ml-4">
-                            Order Index
-                          </label>
-                          <input
-                            name="order_index"
-                            type="number"
-                            className="w-full bg-white/5 border border-white/5 rounded-2xl p-4 focus:outline-none focus:border-purple-500"
-                            defaultValue={editingItem?.order_index || 0}
-                          />
-                        </div>
-                      )}
                       {modalType === "service" && (
                         <div className="space-y-2">
                           <label className="text-[10px] uppercase tracking-widest text-white/30 font-bold ml-4">
