@@ -28,9 +28,9 @@ export default function Home() {
     setIsModalOpen(true);
   };
 
-  const motionProjects = projects.filter(p => p.category === 'Motion Graphics').slice(0, 2);
-  const videoProjects = projects.filter(p => p.category === 'Video Editing').slice(0, 2);
-  const designProjects = projects.filter(p => p.category === 'Graphic Design').slice(0, 3);
+  const motionProjects = projects.filter(p => p.category === 'Motion Graphics').slice(0, 4);
+  const videoProjects = projects.filter(p => p.category === 'Video Editing').slice(0, 4);
+  const designProjects = projects.filter(p => p.category === 'Graphic Design').slice(0, 6);
 
   return (
     <div ref={containerRef} className="relative">

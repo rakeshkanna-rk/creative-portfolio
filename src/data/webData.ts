@@ -39,7 +39,11 @@ export const PERSONAL_INFO = {
   email: 'hello@monishwar.design',
   availability: 'Open for new projects',
   footer_text: 'Designed & Developed with Passion',
-  bio: ''
+  bio: '',
+  contact_form_url: 'https://docs.google.com/forms/d/e/1FAIpQLSeJsVO9VKNjWfSSpJNGYOz51BKlJMRaAFTyqh7NZius9qC4MA/formResponse',
+  contact_name_field: 'entry.1429086625',
+  contact_email_field: 'entry.570557995',
+  contact_message_field: 'entry.887881897',
 };
 
 export const PROJECTS: Project[] = [

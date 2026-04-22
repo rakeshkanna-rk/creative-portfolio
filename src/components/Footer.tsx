@@ -1,18 +1,12 @@
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { Instagram, Twitter, Linkedin, Mail, ArrowUpRight } from 'lucide-react';
+import { Mail, ArrowUpRight } from 'lucide-react';
 import FunkyHeading from './FunkyHeading';
-
 import { usePortfolioData } from '../hooks/usePortfolioData';
-
-const socialLinks = [
-  { name: 'Instagram', icon: Instagram, href: '#' },
-  { name: 'Twitter', icon: Twitter, href: '#' },
-  { name: 'LinkedIn', icon: Linkedin, href: '#' },
-];
+import { getIcon } from '../lib/icons';
 
 export default function Footer() {
-  const { personalInfo } = usePortfolioData();
+  const { personalInfo, socialLinks } = usePortfolioData();
   const currentYear = new Date().getFullYear();
 
   return (
@@ -30,16 +24,19 @@ export default function Footer() {
               {personalInfo.footer_text}
             </p>
             <div className="flex gap-4">
-              {socialLinks.map((link) => (
-                <motion.a
-                  key={link.name}
-                  href={link.href}
-                  whileHover={{ y: -5, scale: 1.1 }}
-                  className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center border border-white/5 hover:border-purple-500/50 hover:bg-purple-500/10 transition-all duration-500"
-                >
-                  <link.icon size={20} className="text-white/60 hover:text-purple-500 transition-colors" />
-                </motion.a>
-              ))}
+              {socialLinks.map((link: any) => {
+                const Icon = getIcon(link.icon_name || link.icon);
+                return (
+                  <motion.a
+                    key={link.id || link.name}
+                    href={link.url || link.href}
+                    whileHover={{ y: -5, scale: 1.1 }}
+                    className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center border border-white/5 hover:border-purple-500/50 hover:bg-purple-500/10 transition-all duration-500"
+                  >
+                    <Icon size={20} className="text-white/60 hover:text-purple-500 transition-colors" />
+                  </motion.a>
+                );
+              })}
             </div>
           </div>
 

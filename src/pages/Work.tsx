@@ -33,33 +33,39 @@ export default function Work() {
         <section className="space-y-12 md:space-y-20">
           <div className="flex items-end justify-between border-b border-white/10 pb-8">
             <FunkyHeading className="text-4xl md:text-7xl">Motion Graphics</FunkyHeading>
-            <span className="text-white/20 text-xs md:text-sm font-mono uppercase tracking-widest hidden md:block">Section 01 / Motion</span>
+            <span className="text-white/20 text-xs md:text-sm font-mono uppercase tracking-widest hidden md:block">
+              Section 01 / Motion [{motionGraphics.length}]
+            </span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12">
-            <div className="md:col-span-9">
-              <WorkCard 
-                index={0} 
-                {...motionGraphics[0]} 
-                onClick={() => handleProjectClick(motionGraphics[0])}
-              />
-            </div>
-            <div className="md:col-span-3">
-              <WorkCard 
-                index={1} 
-                {...motionGraphics[1]} 
-                onClick={() => handleProjectClick(motionGraphics[1])}
-              />
-            </div>
-            <div className="md:col-span-3">
-              <WorkCard 
-                index={2} 
-                {...motionGraphics[2]} 
-                onClick={() => handleProjectClick(motionGraphics[2])}
-              />
-            </div>
-            <div className="md:col-span-9 bg-white/5 rounded-2xl border border-dashed border-white/10 flex items-center justify-center p-10 h-[350px] md:h-[500px]">
-              <p className="text-white/20 text-sm font-mono uppercase tracking-[0.3em] text-center">More Motion Projects Coming Soon</p>
-            </div>
+            {motionGraphics.length > 0 ? (
+              motionGraphics.map((project, i) => {
+                const getSpan = (idx: number) => {
+                  const mod = idx % 3;
+                  if (mod === 0) return "md:col-span-9";
+                  return "md:col-span-3";
+                };
+                return (
+                  <div key={project.id} className={getSpan(i)}>
+                    <WorkCard
+                      index={i}
+                      {...project}
+                      onClick={() => handleProjectClick(project)}
+                    />
+                  </div>
+                );
+              })
+            ) : (
+              <div className="md:col-span-12 py-20 text-center border border-dashed border-white/5 rounded-3xl">
+                <p className="text-white/20 uppercase tracking-widest text-xs">Awaiting Motion Fragments...</p>
+              </div>
+            )}
+            
+            {motionGraphics.length < 3 && (
+              <div className="md:col-span-6 bg-white/5 rounded-2xl border border-dashed border-white/10 flex items-center justify-center p-10 h-[300px] opacity-30">
+                <p className="text-white/20 text-[10px] font-mono uppercase tracking-[0.3em]">More Fragments Loading...</p>
+              </div>
+            )}
           </div>
         </section>
 
@@ -67,30 +73,34 @@ export default function Work() {
         <section className="space-y-12 md:space-y-20">
           <div className="flex items-end justify-between border-b border-white/10 pb-8">
             <FunkyHeading className="text-4xl md:text-7xl">Video Editing</FunkyHeading>
-            <span className="text-white/20 text-xs md:text-sm font-mono uppercase tracking-widest hidden md:block">Section 02 / Editing</span>
+            <span className="text-white/20 text-xs md:text-sm font-mono uppercase tracking-widest hidden md:block">
+              Section 02 / Editing [{videoEditing.length}]
+            </span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12">
-            <div className="md:col-span-3">
-              <WorkCard 
-                index={0} 
-                {...videoEditing[1]} 
-                onClick={() => handleProjectClick(videoEditing[1])}
-              />
-            </div>
-            <div className="md:col-span-9">
-              <WorkCard 
-                index={1} 
-                {...videoEditing[0]} 
-                onClick={() => handleProjectClick(videoEditing[0])}
-              />
-            </div>
-            <div className="md:col-span-12">
-              <WorkCard 
-                index={2} 
-                {...videoEditing[2]} 
-                onClick={() => handleProjectClick(videoEditing[2])}
-              />
-            </div>
+            {videoEditing.length > 0 ? (
+              videoEditing.map((project, i) => {
+                const getSpan = (idx: number) => {
+                  const mod = idx % 3;
+                  if (mod === 0) return "md:col-span-4";
+                  if (mod === 1) return "md:col-span-8";
+                  return "md:col-span-12";
+                };
+                return (
+                  <div key={project.id} className={getSpan(i)}>
+                    <WorkCard
+                      index={i}
+                      {...project}
+                      onClick={() => handleProjectClick(project)}
+                    />
+                  </div>
+                );
+              })
+            ) : (
+              <div className="md:col-span-12 py-20 text-center border border-dashed border-white/5 rounded-3xl">
+                <p className="text-white/20 uppercase tracking-widest text-xs">Cuts pending processing...</p>
+              </div>
+            )}
           </div>
         </section>
 
@@ -98,14 +108,16 @@ export default function Work() {
         <section className="space-y-12 md:space-y-20">
           <div className="flex items-end justify-between border-b border-white/10 pb-8">
             <FunkyHeading className="text-4xl md:text-7xl">Graphic Design</FunkyHeading>
-            <span className="text-white/20 text-xs md:text-sm font-mono uppercase tracking-widest hidden md:block">Section 03 / Design</span>
+            <span className="text-white/20 text-xs md:text-sm font-mono uppercase tracking-widest hidden md:block">
+              Section 03 / Design [{graphicDesign.length}]
+            </span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-12">
             {graphicDesign.map((project, i) => (
-              <WorkCard 
-                key={project.id} 
-                index={i} 
-                {...project} 
+              <WorkCard
+                key={project.id}
+                index={i}
+                {...project}
                 aspectRatio="4/5"
                 onClick={() => handleProjectClick(project)}
               />
